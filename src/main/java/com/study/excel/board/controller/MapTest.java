@@ -199,7 +199,7 @@ public class MapTest {
 	}
 
 	@RequestMapping("test4")
-	public void editTxtFile(@RequestBody ProjectDTO project) throws IOException {
+	public String editTxtFile(@RequestBody ProjectDTO project) throws IOException {
 		String id = UUID.randomUUID().toString().replace("-", "");
 		for (int i = 0; i < project.getParameter().size(); i++) {
 			File oldFile = new File(
@@ -244,6 +244,7 @@ public class MapTest {
 			temp.renameTo(newFile);
 			temp.delete();
 		}
+		   return "redirect:/";
 		}
 	
 	@RequestMapping("test5")
@@ -394,8 +395,6 @@ public class MapTest {
 //			
 //			pRep.insertCsvParam(project);
 //		}
-
-		
 		  String id = UUID.randomUUID().toString().replace("-", "");
 		  for(int ii =0; ii< project.getParameter().size() ; ii++) {
 	        File orgFile = new File("C:\\Users\\cpflv\\Downloads\\newtemp\\"+project.getParameter().get(ii).getFileName()+".txt");
