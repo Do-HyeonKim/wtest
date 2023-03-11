@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.study.excel.board.mapper.ParamRepository">
+
+
+<insert id="insertParamKey"
+	parameterType="com.study.excel.board.dto.ParamLogVO">
+
+  INSERT INTO param_log
+  (file_name
+  ,file_key
+  ,reg_dtm
+  ,reg_user)
+   values 
+   (
+   #{fileName}
+   ,#{fileKey}
+   ,now()
+   ,'admin'
+   )
+</insert>
+
+
+<insert id="insertCsvParam" parameterType="java.util.List">
+    INSERT INTO array_data (id, key1, key2, key3, key4, key5 ,reg_dtm, reg_user)
+    VALUES
+    <foreach collection="csvList" item="map" separator=",">
+        (#{id} , #{map.col0}, #{map.col1}, #{map.col2}, #{map.col3}, #{map.col4} , now(), 'admin')
+    </foreach>
+</insert>
+
+
+</mapper>

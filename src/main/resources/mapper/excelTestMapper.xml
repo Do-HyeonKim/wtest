@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.study.excel.board.mapper.ExcelTestMapper">
+
+
+<insert id="insertExcel" parameterType="com.study.excel.board.dto.ExcelTestDTO">
+	INSERT INTO excel_test
+	(
+	user_name,
+	user_email,
+	user_id,
+	user_phone,
+	user_type,
+	reg_date
+	)
+	VALUES
+	(#{userName}
+	,#{userEmail}
+	,#{userId}
+	,#{userPhone}
+	,#{userType}
+	,NOW()
+	)
+</insert>
+
+</mapper>
