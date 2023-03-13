@@ -198,8 +198,10 @@ public class MapTest {
 		}
 	}
 
-	
-	public String editTxtFile(String id, ProjectDTO project) throws IOException {
+	@RequestMapping("test4")
+	public String editTxtFile(@RequestBody ProjectDTO project) throws IOException {
+		if(editTxtFileCompare(project)) {
+		String id = UUID.randomUUID().toString().replace("-", "");
 		for (int i = 0; i < project.getParameter().size(); i++) {
 			File oldFile = new File(
 					"C:\\Users\\cpflv\\Downloads\\newtemp\\" + project.getParameter().get(i).getFileName() + ".txt");
@@ -227,8 +229,9 @@ public class MapTest {
 				while ((line = reader.readLine()) != null) {
 					String[] parts = line.split("=");
 					String key = parts[0].trim();
-					String value = parts[1].trim();
+					String value = parts[1].trim();	
 					for (ParamDTO param : parameter) {
+						System.out.println((editTxtFileCompare(project)));
 						if (param.getKey().equals(key)) {
 						    if(!param.getValue().equals(value)) {
 						        value = param.getValue();
@@ -236,6 +239,7 @@ public class MapTest {
 						    break;
 						}					
 					}
+					
 					writer.write(key + " = " + value);
 					writer.newLine();
 				}
@@ -245,37 +249,35 @@ public class MapTest {
 			temp.renameTo(newFile);
 			temp.delete();
 		}
+		}
 		   return "redirect:/";
 		}
 	
-	@RequestMapping("test4")
-	public String editTxtFileCompare(@RequestBody ProjectDTO project) throws IOException {
-		String id = UUID.randomUUID().toString().replace("-", "");
-		for (int i = 0; i < project.getParameter().size(); i++) {
-			File oldFile = new File(
-					"C:\\Users\\cpflv\\Downloads\\newtemp\\" + project.getParameter().get(i).getFileName() + ".txt");	
-			List<ParamDTO> parameter = project.getParameter();		
-			BufferedReader reader = new BufferedReader(new FileReader(oldFile));
-			String line;
-			while ((line = reader.readLine()) != null) {
-				if (line.contains("=")) {
-				    String[] parts = line.split("=");
-				    String key = parts[0].trim();
-				    String value = parts[1].trim();
-				    for (ParamDTO param : parameter) {
-				        if (param.getKey().equals(key) && !param.getValue().equals(value)) {
-				            editTxtFile(id, project);
-				            break;
-				        }                  
-				    }
-				}
 
-			}
-		
-		}
-		
-
-		 return "redirect:/";
+	public boolean editTxtFileCompare(@RequestBody ProjectDTO project) throws IOException{
+	    for (ParamDTO parameter : project.getParameter()) {
+	        File oldFile = new File("C:\\Users\\cpflv\\Downloads\\newtemp\\" + parameter.getFileName() + ".txt");
+	        Map<String, String> keyValues = new HashMap<>();
+	        BufferedReader reader = new BufferedReader(new FileReader(oldFile));
+	        String line;
+	        while ((line = reader.readLine()) != null) {
+	            if (line.contains("=")) {
+	                String[] parts = line.split("=");
+	                String key = parts[0].trim();
+	                String value = parts[1].trim();
+	                keyValues.put(key, value);
+	            }
+	        }
+	        reader.close();
+	        List<ParamDTO> params = project.getParameter();
+	        for (int i = 0; i < params.size(); i++) {
+	            ParamDTO param = params.get(i);
+	            if (keyValues.containsKey(param.getKey()) && !keyValues.get(param.getKey()).equals(param.getValue())) {
+	                return true;
+	            }
+	        }
+	    }
+	    return false;
 	}
 	
 	@RequestMapping("test5")
@@ -512,4 +514,87 @@ public class MapTest {
 
 }
 
+	
+//	@RequestMapping("test4")
+//	public String editTxtFile(@RequestBody ProjectDTO project) throws IOException {
+//		if(editTxtFileCompare(project)) {
+//		String id = UUID.randomUUID().toString().replace("-", "");
+//		for (int i = 0; i < project.getParameter().size(); i++) {
+//			File oldFile = new File(
+//					"C:\\Users\\cpflv\\Downloads\\newtemp\\" + project.getParameter().get(i).getFileName() + ".txt");
+//			File newFile = new File("C:\\Users\\cpflv\\Downloads\\newtemp\\" + project.getParameter().get(i).getFileName()
+//					+ "_" + id + ".txt");
+//			
+//			File temp = new File("C:\\Users\\cpflv\\Downloads\\newtemp\\temp.txt");
+//			
+//			FileInputStream fis = new FileInputStream(oldFile);
+//			FileOutputStream fos = new FileOutputStream(temp);
+//			byte[] buffer = new byte[1024];
+//			int length;
+//			while ((length = fis.read(buffer)) > 0) {
+//				fos.write(buffer, 0, length);
+//			}
+//			fis.close();
+//			fos.close();
+//
+//
+//			List<ParamDTO> parameter = project.getParameter();
+//
+//			try (BufferedReader reader = new BufferedReader(new FileReader(temp));
+//					BufferedWriter writer = new BufferedWriter(new FileWriter(oldFile))) {
+//				String line;
+//				while ((line = reader.readLine()) != null) {
+//					String[] parts = line.split("=");
+//					String key = parts[0].trim();
+//					String value = parts[1].trim();	
+//					for (ParamDTO param : parameter) {
+//						System.out.println((editTxtFileCompare(project)));
+//						if (param.getKey().equals(key)) {
+//						    if(!param.getValue().equals(value)) {
+//						        value = param.getValue();
+//						    }
+//						    break;
+//						}					
+//					}
+//					
+//					writer.write(key + " = " + value);
+//					writer.newLine();
+//				}
+//			} catch (IOException e) {
+//				e.printStackTrace();
+//			}
+//			temp.renameTo(newFile);
+//			temp.delete();
+//		}
+//		}
+//		   return "redirect:/";
+//		}
+//	
+//
+//	public boolean editTxtFileCompare(@RequestBody ProjectDTO project) throws IOException{
+//	    for (ParamDTO parameter : project.getParameter()) {
+//	        File oldFile = new File("C:\\Users\\cpflv\\Downloads\\newtemp\\" + parameter.getFileName() + ".txt");
+//	        Map<String, String> keyValues = new HashMap<>();
+//	        BufferedReader reader = new BufferedReader(new FileReader(oldFile));
+//	        String line;
+//	        while ((line = reader.readLine()) != null) {
+//	            if (line.contains("=")) {
+//	                String[] parts = line.split("=");
+//	                String key = parts[0].trim();
+//	                String value = parts[1].trim();
+//	                keyValues.put(key, value);
+//	            }
+//	        }
+//	        reader.close();
+//	        List<ParamDTO> params = project.getParameter();
+//	        for (int i = 0; i < params.size(); i++) {
+//	            ParamDTO param = params.get(i);
+//	            if (keyValues.containsKey(param.getKey()) && !keyValues.get(param.getKey()).equals(param.getValue())) {
+//	                return true;
+//	            }
+//	        }
+//	    }
+//	    return false;
+//	}
+	
 }
