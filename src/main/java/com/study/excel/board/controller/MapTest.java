@@ -198,9 +198,8 @@ public class MapTest {
 		}
 	}
 
-	@RequestMapping("test4")
-	public String editTxtFile(@RequestBody ProjectDTO project) throws IOException {
-		String id = UUID.randomUUID().toString().replace("-", "");
+	
+	public String editTxtFile(String id, ProjectDTO project) throws IOException {
 		for (int i = 0; i < project.getParameter().size(); i++) {
 			File oldFile = new File(
 					"C:\\Users\\cpflv\\Downloads\\newtemp\\" + project.getParameter().get(i).getFileName() + ".txt");
@@ -231,9 +230,11 @@ public class MapTest {
 					String value = parts[1].trim();
 					for (ParamDTO param : parameter) {
 						if (param.getKey().equals(key)) {
-							value = param.getValue();
-							break;
-						}
+						    if(!param.getValue().equals(value)) {
+						        value = param.getValue();
+						    }
+						    break;
+						}					
 					}
 					writer.write(key + " = " + value);
 					writer.newLine();
@@ -246,6 +247,36 @@ public class MapTest {
 		}
 		   return "redirect:/";
 		}
+	
+	@RequestMapping("test4")
+	public String editTxtFileCompare(@RequestBody ProjectDTO project) throws IOException {
+		String id = UUID.randomUUID().toString().replace("-", "");
+		for (int i = 0; i < project.getParameter().size(); i++) {
+			File oldFile = new File(
+					"C:\\Users\\cpflv\\Downloads\\newtemp\\" + project.getParameter().get(i).getFileName() + ".txt");	
+			List<ParamDTO> parameter = project.getParameter();		
+			BufferedReader reader = new BufferedReader(new FileReader(oldFile));
+			String line;
+			while ((line = reader.readLine()) != null) {
+				if (line.contains("=")) {
+				    String[] parts = line.split("=");
+				    String key = parts[0].trim();
+				    String value = parts[1].trim();
+				    for (ParamDTO param : parameter) {
+				        if (param.getKey().equals(key) && !param.getValue().equals(value)) {
+				            editTxtFile(id, project);
+				            break;
+				        }                  
+				    }
+				}
+
+			}
+		
+		}
+		
+
+		 return "redirect:/";
+	}
 	
 	@RequestMapping("test5")
 	public String editcsv() {
@@ -480,4 +511,5 @@ public class MapTest {
 		return "redirect:/";
 
 }
+
 }
