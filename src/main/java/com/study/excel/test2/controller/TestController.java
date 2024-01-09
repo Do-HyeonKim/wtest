@@ -15,6 +15,7 @@ import java.util.Map;
 import javax.print.DocFlavor.STRING;
 
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -28,6 +29,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.study.excel.test2.dto.Test1DTO;
 import com.study.excel.test2.mapper.TestRepository;
 
@@ -946,6 +949,106 @@ public class TestController {
     	          }
     	      }
 }
+    }
+    
+    
+    @RequestMapping("test22")
+	public void test22() throws Exception {
+        File file = new File("C:\\Users\\cpflv\\OneDrive\\바탕 화면\\parser_json.xlsx");
+        FileInputStream fis = new FileInputStream(file);
+        Workbook workbook = new XSSFWorkbook(fis);
+
+        int rowindex = 0;
+        int columnindex = 0;
+        Sheet sheet = workbook.getSheetAt(0);
+        int rows = (sheet.getLastRowNum() + 1);
+        int maxCells = 0;
+
+        for (rowindex = 0; rowindex < rows; rowindex++) {
+            Row row = sheet.getRow(rowindex);
+            if (row != null) {
+                int cells = (row.getLastCellNum());
+                if (cells > maxCells)
+                    maxCells = cells;
+            }
+        }
+
+        List<Map<String, Object>> result = new ArrayList<>();
+        DataFormatter dataFormatter = new DataFormatter();
+
+        for (rowindex = 5; rowindex < rows; rowindex++) {
+            Row row = sheet.getRow(rowindex);
+            if (row != null) {
+                int cells = row.getLastCellNum();
+
+                Map<String, Object> map = new HashMap<>();
+
+                for (columnindex = 0; columnindex < cells; columnindex++) {
+                    Cell cell = row.getCell(columnindex);
+                    String value = dataFormatter.formatCellValue(cell);
+
+
+                    if (cell == null) {
+                        continue;
+                    } else {
+                        switch (cell.getCellType()) {
+                            case Cell.CELL_TYPE_FORMULA:
+                                value = cell.getNumericCellValue() + " ";
+                                break;
+                            case Cell.CELL_TYPE_NUMERIC:
+                                value = cell.getNumericCellValue() + "";
+                                break;
+                            case Cell.CELL_TYPE_STRING:
+                                value = cell.getStringCellValue() + "";
+                                break;
+                            case Cell.CELL_TYPE_BLANK:
+                                value = "";
+                                break;
+                            case Cell.CELL_TYPE_ERROR:
+                                value = cell.getErrorCellValue() + "";
+                                break;
+                        }
+                    }
+
+                    if (columnindex == 2) {
+                    	System.out.println(value);
+                        map.put("stack", value);
+                    } else if (columnindex == 3) {
+                    	System.out.println(value);
+                        map.put("top", value.equals("top"));
+                        map.put("middle", value.equals("middle"));
+                        map.put("bottom", value.equals("bottom"));
+                    } else if (columnindex >= 5) {
+                        Map<String, Object> objectMap = new HashMap<>();
+                        System.out.println(value);
+                        System.out.println(dataFormatter.formatCellValue(row.getCell(columnindex + 1)));
+                        System.out.println(dataFormatter.formatCellValue(row.getCell(columnindex + 2)));
+                        System.out.println(dataFormatter.formatCellValue(row.getCell(columnindex + 3)));
+                        objectMap.put("no", value);
+                        objectMap.put("x", dataFormatter.formatCellValue(row.getCell(columnindex + 1)));
+                        objectMap.put("y", dataFormatter.formatCellValue(row.getCell(columnindex + 2)));
+                        objectMap.put("z", dataFormatter.formatCellValue(row.getCell(columnindex + 3)));
+
+                        if (value.equals("neg")) {
+                            map.put("neg", objectMap);
+                        } else if (value.equals("pos")) {
+                            map.put("pos", objectMap);
+                        } else if (value.equals("center")) {
+                            map.put("center", objectMap);
+                        }
+
+                        // Move to the next set of values
+                        columnindex += 3;
+                    }
+                }
+
+                result.add(map);
+            }
+        }
+
+        // Convert the list to a JSON format
+        String json = result.toString();
+        System.out.println(json);
     }
 }
     
