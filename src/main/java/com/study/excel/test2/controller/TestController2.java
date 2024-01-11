@@ -54,35 +54,52 @@ public class TestController2 {
 		          int startValColIndex = 0; // Start from 1st column
 		          String[] keys = null;
 		          while (rows.hasNext()) {
-		        	  Row nextRow = rows.next();
-		        	  if (nextRow.getRowNum() == startRowIndex) {
-		        	    keys = new String[nextRow.getLastCellNum()];
-		        	    for (int i = startKeyColIndex; i < nextRow.getLastCellNum(); i++) {
-		        	        keys[i] = nextRow.getCell(i).toString();
-		        	    }
-		        	  } else if (nextRow.getRowNum() > startRowIndex && keys != null) {
-		        	    Map<String, Object> map = new LinkedHashMap<>();
-		        	    for (int i = startKeyColIndex; i < nextRow.getLastCellNum(); i++) {
-		        	        map.put(keys[i], nextRow.getCell(i).toString());
-		        	    }
-		        	    List<Map.Entry<String, Object>> list = new ArrayList<>(map.entrySet());
-		        	    Collections.sort(list, new Comparator<Map.Entry<String, Object>>() {
-		        	        public int compare(Map.Entry<String, Object> o1, Map.Entry<String, Object> o2) {
-		        	            return o1.getKey().compareTo(o2.getKey());
-		        	        }
-		        	    });
-		        	    Map<String, Object> sortedMap = new LinkedHashMap<>();
-		        	    for (Map.Entry<String, Object> entry : list) {
-		        	        sortedMap.put(entry.getKey(), entry.getValue());
-		        	    }
-		        	    JSONObject jsonObject = new JSONObject(sortedMap);
-		        	    jsonArray.add(jsonObject);
-		        	  }
-		        	  }
+		              Row nextRow = rows.next();
+		              if (nextRow.getRowNum() == startRowIndex) {
+		                  keys = new String[nextRow.getLastCellNum()];
+		                  for (int i = startKeyColIndex; i < nextRow.getLastCellNum(); i++) {
+		                    keys[i] = getCellValue(nextRow.getCell(i)).toString();
+		                  }
+		              } else if (nextRow.getRowNum() > startRowIndex && keys != null) {
+		                  Map<String, Object> map = new LinkedHashMap<>();
+		                  for (int i = startKeyColIndex; i < nextRow.getLastCellNum(); i++) {
+		                    map.put(keys[i], getCellValue(nextRow.getCell(i)));
+		                  }
+		                  List<Map.Entry<String, Object>> list = new ArrayList<>(map.entrySet());
+		                  Collections.sort(list, new Comparator<Map.Entry<String, Object>>() {
+		                    public int compare(Map.Entry<String, Object> o1, Map.Entry<String, Object> o2) {
+		                        return o1.getKey().compareTo(o2.getKey());
+		                    }
+		                  });
+		                  Map<String, Object> sortedMap = new LinkedHashMap<>();
+		                  for (Map.Entry<String, Object> entry : list) {
+		                    sortedMap.put(entry.getKey(), entry.getValue());
+		                  }
+		                  JSONObject jsonObject = new JSONObject(sortedMap);
+		                  jsonArray.add(jsonObject);
+		              }
+		          }
 		          System.out.println(jsonArray.toJSONString());
 		          return jsonArray;
 		      }
 	
+	
+	 private static Object getCellValue(Cell cell) {
+	      switch (cell.getCellType()) {
+	          case Cell.CELL_TYPE_STRING:
+	              return cell.getStringCellValue();
+	          case Cell.CELL_TYPE_NUMERIC:
+	              return cell.getNumericCellValue();
+	          case Cell.CELL_TYPE_BOOLEAN:
+	              return cell.getBooleanCellValue();
+	          case Cell.CELL_TYPE_FORMULA:
+	              return cell.getNumericCellValue();
+	          case Cell.CELL_TYPE_BLANK:
+	              return "";
+	          default:
+	              return cell.toString();
+	      }
+	  }
 	
 	@RequestMapping("test2")
 	public JSONArray test2(@RequestBody TC2 tc2) throws Exception{
