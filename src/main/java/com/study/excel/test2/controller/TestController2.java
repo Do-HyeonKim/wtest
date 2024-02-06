@@ -107,7 +107,7 @@ public class TestController2 {
 	      }
 	  }
 	
-	@GetMapping("test2")
+	@RequestMapping("test2")
 	public JSONArray test2(@RequestBody TC2 tc2) throws Exception{
 		System.out.println("zz");
 		
