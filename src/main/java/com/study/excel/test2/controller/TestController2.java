@@ -3,6 +3,7 @@ package com.study.excel.test2.controller;
 import java.awt.SystemColor;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -11,10 +12,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.Arrays;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.DateUtil;
@@ -25,6 +29,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.hibernate.internal.build.AllowSysOut;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
 import org.json.simple.parser.JSONParser;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -374,8 +379,208 @@ public class TestController2 {
 		return interpolatedGroup;
 	}
 	
+	@RequestMapping("test3")
+	public JSONObject test3() {
+		
+		 File file = new File("C:\\Users\\cpflv\\OneDrive\\바탕 화면\\test.xlsx");
+		 
+		 
+	        try (FileInputStream fis = new FileInputStream(file);
+	                Workbook workbook = new XSSFWorkbook(fis)) {
+
+	               // 시트 2 처리 : 전체 데이터
+	               Sheet sheet2 = workbook.getSheetAt(0);
+	               JSONArray jsonArraySheet2 = convertSheetToJsonArray(sheet2);
+
+	               // 결과 JSON 객체 생성
+	               JSONObject resultObject = new JSONObject();
+	               resultObject.put("sheet2", jsonArraySheet2);
+
+	               
+	               // "sheet1" 키를  가진 배열을 생성합니다.
+	               JSONArray jsonArraySheet1 = new JSONArray();
+
+	               // points 배열을  선언합니다.
+	               List<String> points = new ArrayList<>();
+	               points.add("point16");
+	               points.add("point17");
+	               points.add("point72");
+	               points.add("point15");
+	               points.add("point35");
+	               points.add("point42");
+	               points.add("point69");
+	               points.add("point44");
+	               points.add("point11");
+	               points.add("point12");
+	               points.add("point18");
+          
+	               
+	               
+	               //이부분은 mps에서 처리할지 simulator에서 처리할지 생각해봐야함 
+//	               for (int i =  0; i < jsonArraySheet2.size(); i++) {
+	               for(Object object : jsonArraySheet2) {
+//	                   JSONObject sheet2Object = (JSONObject) jsonArraySheet2.get(i);
+	            	   JSONObject sheet2Object = (JSONObject) object; 
+	                   JSONObject sheet1Object = new JSONObject();
+
+	                   //객체 키 순회 
+	                   Iterator<Map.Entry<String, Object>> iterator = sheet2Object.entrySet().iterator();
+	                   while (iterator.hasNext()) {
+	                       Map.Entry<String, Object> entry = iterator.next();
+	                       String key = entry.getKey();
+	                       // 키가 points 배열에 포함되는지 확인합니다.
+//	                       if (Arrays.asList(points).contains(key)) {
+	                    	   if (points.contains(key)) {
+	                           // points 배열에 포함되면 "sheet1" 객체에 추가합니다.
+	                           sheet1Object.put(key, entry.getValue());
+	                       }
+	                       // points 배열에 포함되지 않는 키는 "sheet1" 객체에  그대로 추가합니다.
+	                        else if (!key.startsWith("point")) {
+	                           sheet1Object.put(key, sheet2Object.get(key));
+	                       }
+	                   }
+
+	                  
+	                   jsonArraySheet1.add(sheet1Object);
+	               }
+
+	               // "sheet1" 배열을  원래의 JSON 객체에 추가합니다.
+	               resultObject.put("sheet1", jsonArraySheet1);
+
+
+	             return resultObject;
+	             }
+	        
+	 catch (IOException e) {
+	               e.printStackTrace();
+	           }
+	        return null;
+	       }
 	
-	
+		// sheet -> json 생성
+	     private JSONArray convertSheetToJsonArray(Sheet sheet) {
+	         JSONArray jsonArray = new JSONArray();
+	         Row headerRow = sheet.getRow(0);
+
+	         for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+	             Row currentRow = sheet.getRow(i);
+	             JSONObject jsonObject = new JSONObject();
+
+	             for (int j = 0; j < headerRow.getLastCellNum(); j++) {
+	                 Cell currentCell = currentRow.getCell(j);
+	                 Cell headerCell = headerRow.getCell(j);
+	                 jsonObject.put(cleanHeader(headerCell.getStringCellValue()), getCellValue2(currentCell));
+	             }
+
+	             jsonArray.add(jsonObject);
+	         }
+
+	         return jsonArray;
+	     }
+
+
+		 
+	     //셀 가져오는거
+	     private  Object getCellValue2(Cell cell) {
+	         if (cell == null) {
+	             return null;
+	         }
+
+	         switch (cell.getCellType()) {
+	          case Cell.CELL_TYPE_STRING:
+	              return cell.getStringCellValue();
+	          case Cell.CELL_TYPE_NUMERIC:
+	              return cell.getNumericCellValue();
+	          case Cell.CELL_TYPE_BOOLEAN:
+	              return cell.getBooleanCellValue();
+	          case Cell.CELL_TYPE_FORMULA:
+	              return cell.getNumericCellValue();
+	          case Cell.CELL_TYPE_BLANK:
+	              return "";
+	          default:
+	              return cell.toString();
+	      }
+	     }
+	     
+	     
+	     private String cleanHeader(String header) {
+	    	    header = header.replaceAll("\\[.*?\\]", "");
+
+	    	    header = header.replaceAll("-", "");
+
+	    	    header = header.toLowerCase();
+
+	    	    return header.trim();
+	    	}
+	     
+	     @RequestMapping("makeExcel")
+	     public void makeExcel(@RequestBody JSONObject jboj) {
+
+	    	 //파싱 안해주면 오류남 
+	    	 JSONObject obj=(JSONObject)JSONValue.parse(jboj.toString()); 
+	         
+	    	 JSONArray sheet1Array = (JSONArray)obj.get("sheet1");
+	         JSONArray sheet2Array = (JSONArray)obj.get("sheet2");
+
+	         Workbook workbook = new XSSFWorkbook();
+
+	         Sheet sheet1 = workbook.createSheet("Sheet1");
+	         writeDataToSheet(sheet1, sheet1Array);
+
+	         Sheet sheet2 = workbook.createSheet("Sheet2");
+	         writeDataToSheet(sheet2, sheet2Array);
+
+	         try (FileOutputStream fileOut = new FileOutputStream("C:\\Users\\cpflv\\workbook.xlsx")) {
+	             workbook.write(fileOut);
+	         } catch (IOException e) {
+	             e.printStackTrace();
+	         }
+	     }
+	     
+	     private  void writeDataToSheet(Sheet sheet, JSONArray dataArray) {
+	 
+//	         JSONArray dataArray = (JSONArray)jboj.get("sheet1");
+	         
+//	         JSONObject headerObj = (JSONObject)dataArray.get(0);
+
+	         if (dataArray.size() > 0) {
+	                // 0번째 객체의 키값을 가져와서 헤더로 사용
+	                JSONObject firstObject = (JSONObject)dataArray.get(0);
+	                List<String> headers = new ArrayList<>();
+	                for(Object key  : firstObject.keySet()) {
+	                	headers.add(key.toString());
+	                }
+	                
+	                
+	                // 헤더를 알파벳 순으로 정렬
+	                Collections.sort(headers);
+	                
+	                // 첫 번째 행에 헤더 추가
+	                Row headerRow = sheet.createRow(0);
+	                for (int col = 0; col < headers.size(); col++) {
+	                    Cell cell = headerRow.createCell(col);
+	                    cell.setCellValue(headers.get(col));
+	                }
+	                
+	                
+	                // 나머지 행에 값 추가
+	                for (int row = 0; row < dataArray.size(); row++) {
+	                    JSONObject jsonObject = (JSONObject) dataArray.get(row);
+	                    Row dataRow = sheet.createRow(row + 1); // 헤더가 첫 번째 행이므로 행 인덱스는 row + 1
+
+	                    for (int col = 0; col < headers.size(); col++) {
+	                        Cell cell = dataRow.createCell(col);
+	                        cell.setCellValue(jsonObject.get(headers.get(col)).toString());
+	                    }
+	                }
+	                
+	                System.out.println("성공 ㅇㅇ");
+	            }
+	         
+	         
+	     
+
+	     }
 	
 }
     
