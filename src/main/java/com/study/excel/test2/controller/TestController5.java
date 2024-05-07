@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -41,21 +42,29 @@ public class TestController5 {
 	                double[][] valueT = readSheet(workbook.getSheet("value_T"));
 
 	                // 시간 선택
-	                double timeSelect = maxValueTime(valueT);
+	                int timeSelect = (int)maxValueTime(valueT);
 	                
 
-	                // 보간 알고리즘을 사용하여 값 보간
-	                double[][] valueSelect = new double[pointNo.length][pointNo[0].length];
-	                for (int i = 0; i < pointNo.length; i++) {
-	                    for (int j = 0; j < pointNo[0].length; j++) {
-	                        int nop = i * pointNo[0].length + j + 1;
-	                        valueSelect[i][j] = interp1(valueT, 0, nop, timeSelect);
-	                        pointValue[i][j] = valueSelect[i][j];
+	                // 선택된 시간에 해당하는 데이터 행 추출
+	                double[] selectedRow = valueT[timeSelect];
+	                double[] slicedArray = Arrays.copyOfRange(selectedRow, 1, selectedRow.length);
+	                // 3x3 행렬로 변환
+	                double[][] matrix = new double[3][3];
+	                int dataIndex = 1;
+	                for (int i = 0; i < 3; i++) {
+	                    for (int j = 0; j < 3; j++) {
+	                    	pointValue[i][j] = selectedRow[dataIndex++];
 	                    }
 	                }
 	                
 	                
-	           
+	                // 결과 출력
+	                for (int i = 0; i < 3; i++) {
+	                    for (int j = 0; j < 3; j++) {
+	                        System.out.print(pointValue[i][j] + " ");
+	                    }
+	                    System.out.println();
+	                }
 	                // x, y, z 값의 최대 및 최소값 계산
 	                double minReadX = minValue(pointLo, 3);
 	                double maxReadX = maxValue(pointLo, 3);
@@ -63,17 +72,24 @@ public class TestController5 {
 	                double maxReadY = maxValue(pointLo, 4);
 	                double minReadZ = minValue(pointLo, 5);
 	                double maxReadZ = maxValue(pointLo, 5);
-
+	                
+	                double maxTemp = Arrays.stream(slicedArray).max().getAsDouble();
+	                double minTemp = Arrays.stream(slicedArray).min().getAsDouble();
+	                
+	                System.out.println(maxTemp);
+	                System.out.println(minTemp);
 	                // x, y, z 간격 계산
 	                double intervalX = Math.abs(maxReadX - minReadX) / 100;
 	                double intervalY = Math.abs(maxReadY - minReadY) / 100;
 	                double intervalZ = Math.abs(maxReadZ - minReadZ) / 100;
-
+	                double intervalTemp = Math.abs(maxTemp - minTemp) / 100;
+	                
+	                
 	                // meshgrid 생성
 	                double[] xq = meshGrid(minReadX, maxReadX, intervalX);
 	                double[] yq = meshGrid(minReadY, maxReadY, intervalY);
 	                double[] zq = meshGrid(minReadZ, maxReadZ, intervalZ);
-	                
+	                double[] temp = meshGrid(minTemp, maxTemp, intervalTemp);
 	                
 	             // meshGrid 생성
 	                JSONArray xqArray = new JSONArray();
@@ -83,7 +99,13 @@ public class TestController5 {
 
 	                JSONArray yqArray = new JSONArray();
 	                for (double value : yq) {
-	                    yqArray.add(value);
+	                	if(yq.length==1) {
+	                		for(double xqValue : xq) {
+	                			yqArray.add(value);
+	                		}
+	                	}else {
+	                		yqArray.add(value);
+	                	}
 	                }
 
 	                JSONArray zqArray = new JSONArray();
@@ -91,6 +113,12 @@ public class TestController5 {
 	                    zqArray.add(value);
 	                }
 	                
+	                
+
+	                JSONArray tempArray = new JSONArray();
+	                for (double value : temp) {
+	                	tempArray.add(value);
+	                }
 
 	                // pointValue 배열을 JSON 배열로 변환
 	                JSONArray pointValueArray = new JSONArray();
@@ -109,28 +137,29 @@ public class TestController5 {
 	                jsonObject.put("xq", xqArray);
 	                jsonObject.put("yq", yqArray);
 	                jsonObject.put("zq", zqArray);
+	                jsonObject.put("temp", tempArray);
 	                jsonObject.put("pointValue", pointValueArray);
 	                
 	                
 	             // xq 배열 출력
-	                System.out.println("xq:");
-	                for (double value : xq) {
-	                    System.out.print(value + " ");
-	                }
-	                System.out.println();
-
-	                // yq 배열 출력
-	                System.out.println("yq:");
-	                for (double value : yq) {
-	                    System.out.print(value + " ");
-	                }
-	                System.out.println();
-
-	                // zq 배열 출력
-	                System.out.println("zq:");
-	                for (double value : zq) {
-	                    System.out.print(value + " ");
-	                }
+//	                System.out.println("xq:");
+//	                for (double value : xq) {
+//	                    System.out.print(value + " ");
+//	                }
+//	                System.out.println();
+//
+//	                // yq 배열 출력
+//	                System.out.println("yq:");
+//	                for (double value : yq) {
+//	                    System.out.print(value + " ");
+//	                }
+//	                System.out.println();
+//
+//	                // zq 배열 출력
+//	                System.out.println("zq:");
+//	                for (double value : zq) {
+//	                    System.out.print(value + " ");
+//	                }
 	                
 	                
 	                workbook.close();
@@ -206,40 +235,53 @@ public class TestController5 {
 	        }
 	        return grid;
 	    }
+	    
 
-	    // 보간 알고리즘 구현
-	    private static double interp1(double[][] valueT, int timeIndex, int nop, double timeSelect) {
-	        // 예시로 선형 보간 알고리즘을 구현합니다.
-	        double[] timeColumn = valueT[timeIndex]; // 첫 번째 열은 시간 정보입니다.
-	        double[] valueColumn = valueT[nop]; // nop에 해당하는 열은 보간할 값입니다.
+	    public static double interp1(double[][] valueT, int timeIndex, int rowIndex, int colIndex) {
+	        int numOfRows = valueT.length;
+	        int numOfCols = valueT[0].length;
 
-	        // 시간 값의 최소와 최대 범위 확인
-	        double minTime = timeColumn[0];
-	        double maxTime = timeColumn[timeColumn.length - 1];
-
-	        // 시간이 주어진 범위를 벗어나면 가장 가까운 값으로 보간합니다.
-	        if (timeSelect <= minTime) {
-	            return valueColumn[0];
-	        }
-	        if (timeSelect >= maxTime) {
-	            return valueColumn[valueColumn.length - 1];
+	        // 보간할 값의 행 인덱스가 행렬 범위를 벗어나는지 확인
+	        if (rowIndex < 0 || rowIndex >= numOfRows) {
+	            throw new IllegalArgumentException("Row index is out of range.");
 	        }
 
-	        // 주어진 시간 값에 가장 가까운 인덱스를 찾습니다.
-	        int index = 0;
-	        for (int i = 0; i < timeColumn.length - 1; i++) {
-	            if (timeSelect >= timeColumn[i] && timeSelect <= timeColumn[i + 1]) {
-	                index = i;
+	        // 보간할 값의 열 인덱스가 행렬 범위를 벗어나는지 확인
+	        if (colIndex < 0 || colIndex >= numOfCols) {
+	            throw new IllegalArgumentException("Column index is out of range.");
+	        }
+
+	        // 주어진 시간 인덱스가 행렬 범위를 벗어나는지 확인
+	        if (timeIndex < 0 || timeIndex >= numOfCols) {
+	            throw new IllegalArgumentException("Time index is out of range.");
+	        }
+
+	        // 보간할 값을 얻기 위해 사용할 시간 값
+	        double timeSelect = valueT[0][timeIndex];
+
+	        // 보간할 값의 바로 왼쪽과 오른쪽의 인덱스 찾기
+	        int leftIndex = -1;
+	        int rightIndex = -1;
+	        for (int i = 1; i < numOfCols - 1; i++) {
+	            if (valueT[0][i] <= timeSelect && valueT[0][i + 1] > timeSelect) {
+	                leftIndex = i;
+	                rightIndex = i + 1;
 	                break;
 	            }
 	        }
 
-	        // 선형 보간을 수행합니다.
-	        double t0 = timeColumn[index];
-	        double t1 = timeColumn[index + 1];
-	        double v0 = valueColumn[index];
-	        double v1 = valueColumn[index + 1];
-	        return v0 + (v1 - v0) * (timeSelect - t0) / (t1 - t0);
-	    }
+	        // 보간할 값이 범위를 벗어나는지 확인
+	        if (leftIndex == -1 || rightIndex == -1) {
+	            throw new IllegalArgumentException("Time value is out of range.");
+	        }
 
+	        // 보간할 값의 바로 왼쪽과 오른쪽의 값을 얻기
+	        double x0 = valueT[rowIndex][leftIndex];
+	        double x1 = valueT[rowIndex][rightIndex];
+	        double y0 = valueT[rowIndex][timeIndex];
+	        double y1 = valueT[rowIndex][timeIndex + 1];
+
+	        // 선형 보간하여 값을 반환
+	        return y0 + ((timeSelect - x0) / (x1 - x0)) * (y1 - y0);
+	    }
 }
