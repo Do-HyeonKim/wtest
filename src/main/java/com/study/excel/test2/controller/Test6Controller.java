@@ -170,10 +170,9 @@ public class Test6Controller {
 	               for(int value : Pointnumbers) {
 	            	   points.add("point"+value);
 
-	               }
+	               } 
 	               
 	               System.out.println(points);
-	               
 	               //이부분은 mps에서 처리할지 simulator에서 처리할지 생각해봐야함 
 //	               for (int i =  0; i < jsonArraySheet2.size(); i++) {
 	               for(Object object : jsonArraySheet2) {
