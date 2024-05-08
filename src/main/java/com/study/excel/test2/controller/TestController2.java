@@ -402,17 +402,17 @@ public class TestController2 {
 
 	               // points 배열을  선언합니다.
 	               List<String> points = new ArrayList<>();
-	               points.add("point16");
-	               points.add("point17");
-	               points.add("point72");
-	               points.add("point15");
-	               points.add("point35");
+	               points.add("point39");
+	               points.add("point40");
+	               points.add("point41");
 	               points.add("point42");
-	               points.add("point69");
+	               points.add("point43");
 	               points.add("point44");
-	               points.add("point11");
-	               points.add("point12");
-	               points.add("point18");
+	               points.add("point45");
+	               points.add("point46");
+	               points.add("point47");
+	               points.add("point48");
+	               points.add("point49");
           
 	               
 	               
