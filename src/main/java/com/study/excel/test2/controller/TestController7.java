@@ -63,7 +63,10 @@ public class TestController7 {
 	        List<Movo> movoList = new ArrayList<>();
 	        Map<Integer, Movo> cidToMoVoMap = new HashMap<>();
 	        JSONParser parser = new JSONParser();
-	        Reader reader = new FileReader("C:\\Users\\cpflv\\OneDrive\\바탕 화면\\"+target+".json");
+	        for (int i =1 ; i<=3 ; i ++) {
+	        Reader reader = new FileReader("C:\\Users\\cpflv\\OneDrive\\바탕 화면\\"+target+i+".json");
+//	        Reader reader = new FileReader("C:\\Users\\cpflv\\OneDrive\\바탕 화면\\"+target+1+".json");
+	        System.out.println("현재파일명 :" + target+i+".json" );
 	        Object obj = parser.parse(reader);
 	        JSONObject jsonObject = (JSONObject)obj;
             JSONObject annotations = (JSONObject) jsonObject.get("Annotations");
@@ -117,7 +120,7 @@ public class TestController7 {
 	        }
 	        
 	        
-		
+	}
 		return movoList;
 	}
 	
