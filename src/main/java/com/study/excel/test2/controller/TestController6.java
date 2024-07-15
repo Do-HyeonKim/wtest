@@ -27,7 +27,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("tc6")
 @RequiredArgsConstructor
-public class Test6Controller {
+public class TestController6 {
 	
 	
 	@RequestMapping("makeExcelContour")
